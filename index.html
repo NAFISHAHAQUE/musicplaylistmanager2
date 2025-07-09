@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Playlist Manager - Home, Playlist & About</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        body {
+            background: linear-gradient(rgba(26, 26, 26, 0.7), rgba(46, 46, 46, 0.7)), url('https://images.unsplash.com/photo-1506157786151-b8491531f063?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
+            background-size: cover;
+            min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
+            overflow-x: hidden;
+            margin: 0;
+            position: relative;
+        }
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 2rem;
+            padding-right: 2rem;
+        }
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+        .nav-link:hover {
+            color: #ffffff;
+            transition: color 0.3s ease;
+        }
+        .song-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .song-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+        .btn-animated {
+            transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .btn-animated:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+        .equalizer div {
+            display: inline-block;
+            width: 8px;
+            height: 20px;
+            background: #2e2e2e;
+            margin: 0 2px;
+            animation: equalizer 0.5s infinite alternate;
+        }
+        .equalizer div:nth-child(1) { animation-delay: 0.1s; }
+        .equalizer div:nth-child(2) { animation-delay: 0.2s; }
+        .equalizer div:nth-child(3) { animation-delay: 0.3s; }
+        .equalizer div:nth-child(4) { animation-delay: 0.4s; }
+        @keyframes equalizer {
+            from { height: 20px; }
+            to { height: 40px; }
+        }
+        .waveform-canvas {
+            width: 100%;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0.5rem;
+        }
+        .section {
+            min-height: 0;
+            padding-top: 6rem;
+            transition: opacity 0.5s ease;
+        }
+        .section.hidden {
+            display: none;
+        }
+        .hero, .features, .team-carousel, .timeline {
+            animation: fadeIn 1.2s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        #playlist-section {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .team-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .team-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 0;
+            width: 16px;
+            height: 16px;
+            background: #1a1a1a;
+            border-radius: 50%;
+        }
+        footer {
+            background: rgba(0, 0, 0, 0.5);
+        }
+        .playlist-container {
+            display: flex;
+            gap: 2rem;
+            padding-left: 0;
+        }
+        .sidebar {
+            width: 250px;
+            flex-shrink: 0;
+            padding-left: 0;
+        }
+        .playlist-content {
+            flex: 1;
+            padding-left: 0;
+        }
+        .recommendations {
+            width: 250px;
+            flex-shrink: 0;
+            padding-left: 0;
+        }
+        .song-item {
+            padding: 0.5rem;
+            cursor: pointer;
+        }
+        .song-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .category-content {
+            display: none;
+            padding-top: 1rem;
+            padding-left: 0;
+        }
+        .category-content.active {
+            display: block;
+        }
+        .artist-box {
+            margin-top: 1rem;
+            padding: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            padding-left: 0;
+        }
+        .lyrics-box {
+            margin-top: 1rem;
+            padding: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            max-height: 200px;
+            overflow-y: auto;
+            padding-left: 0;
+        }
+        /* Star Animation Styles */
+        .star-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: -1;
+        }
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+            animation: fall 5s linear infinite, twinkle 1.5s infinite alternate;
+        }
+        @keyframes fall {
+            0% { transform: translateY(-10vh); opacity: 1; }
+            100% { transform: translateY(110vh); opacity: 0; }
+        }
+        @keyframes twinkle {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        /* Sign In Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+        .modal-content {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 400px;
+            margin: 10% auto;
+            padding: 2rem;
+            text-align: center;
+            color: white;
+        }
+        .modal-content input {
+            width: 80%;
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.5rem;
+            color: white;
+        }
+        .modal-content button {
+            padding: 0.5rem 1rem;
+            background: #4a90e2;
+            border: none;
+            border-radius: 0.5rem;
+            color: white;
+            cursor: pointer;
+        }
+        .modal-content button:hover {
+            background: #357abd;
+        }
+        /* Username Display Style */
+        .username-display {
+            font-size: 0.9rem;
+            color: #ffffff;
+            margin-left: 1rem;
+        }
+    </style>
+</head>
+<body class="text-white">
+    <div class="star-wrapper" id="star-container"></div>
+    <nav class="glassmorphism fixed w-full top-0 z-10 p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="#home-section" class="text-2xl font-bold">🎵 BeatBrew</a>
+            <div class="space-x-6 flex items-center">
+                <a href="#home-section" class="nav-link font-semibold" onclick="showSection('home-section'); return false;">Home</a>
+                <a href="#playlist-section" class="nav-link font-semibold" onclick="showSection('playlist-section'); return false;">Playlist</a>
+                <a href="#about-section" class="nav-link font-semibold" onclick="showSection('about-section'); return false;">About</a>
+                <a href="#" id="authLink" class="nav-link font-semibold" onclick="toggleAuth(); return false;">Sign In</a>
+                <span id="usernameDisplay" class="username-display"></span>
+            </div>
+        </div>
+    </nav>
+
+    <section id="home-section" class="section">
+        <div class="container mx-auto pt-24 pb-12 px-6 text-center hero">
+            <h1 class="text-5xl md:text-6xl font-extrabold mb-6 leading-tight">
+                Welcome to <span class="text-white">BeatBrew</span>
+            </h1>
+            <p class="text-xl md:text-2xl mb-8 text-gray-200">
+                Create, manage, and vibe with your ultimate music playlists.
+            </p>
+            <a href="#playlist-section" class="btn-animated bg-gray-800 text-white px-8 py-4 rounded-full font-semibold inline-block" onclick="showSection('playlist-section'); return false;">
+                Start Jamming Now
+            </a>
+        </div>
+        <div class="container mx-auto px-6 py-12 features">
+            <h2 class="text-3xl font-bold text-center mb-10">Why BeatBrew?</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="glassmorphism p-6 rounded-lg text-center">
+                    <i class="fas fa-music text-4xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2">Curate Playlists</h3>
+                    <p class="text-gray-400">Easily add and organize your favorite songs.</p>
+                </div>
+                <div class="glassmorphism p-6 rounded-lg text-center">
+                    <i class="fas fa-sync-alt text-4xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2">Seamless Navigation</h3>
+                    <p class="text-gray-400">Switch between songs with smooth controls.</p>
+                </div>
+                <div class="glassmorphism p-6 rounded-lg text-center">
+                    <i class="fas fa-heart text-4xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2">Vibe Anywhere</h3>
+                    <p class="text-gray-400">Responsive design for all devices.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="playlist-section" class="section hidden">
+        <div class="container mx-auto px-6 py-12">
+            <h1 class="text-4xl font-bold text-center mb-8">Your Playlist</h1>
+
+            <div class="playlist-container">
+                <!-- Left Sidebar -->
+                <div class="sidebar">
+                    <div class="glassmorphism p-6">
+                        <h2 class="text-xl font-bold mb-4 text-center">Browse</h2>
+                        <div class="space-y-2">
+                            <div class="text-lg font-semibold cursor-pointer" onclick="showCategory('picked')">Picked for You</div>
+                            <div id="picked-content" class="category-content pl-4 space-y-1">
+                                <div class="song-item" onclick="addPickedSong('Good Luck, Babe!', 'Chappell Roan', '3:35', '2024', 'latest'); playlist.playSongByTitle('Good Luck, Babe!'); updateLyrics('Good Luck, Babe!')">Good Luck, Babe! - Chappell Roan</div>
+                                <div class="song-item" onclick="addPickedSong('Espresso', 'Sabrina Carpenter', '2:57', '2024', 'latest'); playlist.playSongByTitle('Espresso'); updateLyrics('Espresso')">Espresso - Sabrina Carpenter</div>
+                                <div class="song-item" onclick="addPickedSong('Perfect', 'Ed Sheeran', '4:23', '2017', 'love'); playlist.playSongByTitle('Perfect'); updateLyrics('Perfect')">Perfect - Ed Sheeran</div>
+                            </div>
+                            <div class="text-lg font-semibold cursor-pointer" onclick="showCategory('made')">Made for You</div>
+                            <div id="made-content" class="category-content pl-4 space-y-1">
+                                <div class="song-item" onclick="addMadeSong('Custom Mix 1', 'Various Artists', '3:45', '2025', 'custom'); playlist.playSongByTitle('Custom Mix 1'); updateLyrics('Custom Mix 1')">Custom Mix 1 - Various Artists</div>
+                                <div class="song-item" onclick="addMadeSong('Custom Mix 2', 'Various Artists', '4:10', '2025', 'custom'); playlist.playSongByTitle('Custom Mix 2'); updateLyrics('Custom Mix 2')">Custom Mix 2 - Various Artists</div>
+                            </div>
+                            <div class="text-lg font-semibold cursor-pointer" onclick="showCategory('recent')">Recently Played</div>
+                            <div id="recent-content" class="category-content pl-4 space-y-1">
+                                <!-- Populated dynamically -->
+                            </div>
+                            <div class="text-lg font-semibold cursor-pointer" onclick="showCategory('popular')">Popular Albums</div>
+                            <div id="popular-content" class="category-content pl-4 space-y-1">
+                                <div class="song-item" onclick="addPopularAlbum('Album 1', 'Artist A', '3:30', '2024', 'popular'); playlist.playSongByTitle('Album 1'); updateLyrics('Album 1')">Album 1 - Artist A</div>
+                                <div class="song-item" onclick="addPopularAlbum('Album 2', 'Artist B', '4:00', '2023', 'popular'); playlist.playSongByTitle('Album 2'); updateLyrics('Album 2')">Album 2 - Artist B</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="artist-box">
+                        <div class="text-lg font-semibold cursor-pointer" onclick="showCategory('artists')">Popular Artists</div>
+                        <div id="artists-content" class="category-content pl-4 space-y-1">
+                            <div class="song-item" onclick="showArtistSongs('Chappell Roan')">Chappell Roan</div>
+                            <div class="song-item" onclick="showArtistSongs('Sabrina Carpenter')">Sabrina Carpenter</div>
+                            <div class="song-item" onclick="showArtistSongs('Ed Sheeran')">Ed Sheeran</div>
+                            <div class="song-item" onclick="showArtistSongs('Taylor Swift')">Taylor Swift</div>
+                        </div>
+                    </div>
+                    <div class="lyrics-box">
+                        <div class="text-lg font-semibold">Lyrics</div>
+                        <div id="lyrics-content" class="category-content pl-4 mt-2 text-sm text-gray-300">
+                            <!-- Lyrics will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Playlist Content -->
+                <div class="playlist-content">
+                    <!-- Input Form -->
+                    <div class="glassmorphism p-6 mb-8">
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <input type="text" id="songTitle" placeholder="Song Title" class="p-3 rounded-lg bg-gray-900 text-white flex-1 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                            <input type="text" id="artist" placeholder="Artist" class="p-3 rounded-lg bg-gray-900 text-white flex-1 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                            <input type="text" id="duration" placeholder="Duration (e.g., 3:45)" class="p-3 rounded-lg bg-gray-900 text-white flex-1 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                            <button onclick="addSong()" class="btn-animated bg-gray-800 text-white p-3 rounded-lg font-semibold">Add Song</button>
+                        </div>
+                        <div id="totalDuration" class="text-gray-400 mt-2 text-sm"></div>
+                    </div>
+
+                    <!-- Search Bar -->
+                    <div class="glassmorphism p-4 mb-8 flex">
+                        <input type="text" id="searchInput" placeholder="Search songs..." class="w-full p-3 rounded-l-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-gray-500" onkeypress="if(event.key === 'Enter') searchSongOnline()">
+                        <button onclick="searchSongOnline()" class="btn-animated bg-gray-800 text-white p-3 rounded-r-lg"><i class="fas fa-search"></i></button>
+                        <p class="text-xs text-gray-400 mt-1">Use to search songs online on Google and YouTube for quick discovery.</p>
+                    </div>
+
+                    <!-- Playlist Controls -->
+                    <div class="glassmorphism p-4 mb-8 flex justify-between">
+                        <button onclick="removeAllSongs()" class="btn-animated bg-gray-900 text-white p-3 rounded-lg font-semibold">Remove All</button>
+                        <button onclick="savePlaylist()" class="btn-animated bg-teal-700 text-white p-3 rounded-lg font-semibold">Save Playlist</button>
+                    </div>
+
+                    <!-- Playback Controls -->
+                    <div class="glassmorphism p-4 rounded-lg mb-8 flex justify-center gap-4">
+                        <button onclick="playPrevious()" class="btn-animated bg-gray-700 p-3 rounded-full"><i class="fas fa-backward"></i></button>
+                        <button id="playPauseBtn" onclick="togglePlayPause()" class="btn-animated bg-gray-800 p-3 rounded-full"><i class="fas fa-play"></i></button>
+                        <button onclick="playNext()" class="btn-animated bg-gray-700 p-3 rounded-full"><i class="fas fa-forward"></i></button>
+                    </div>
+
+                    <!-- Equalizer Animation -->
+                    <div class="text-center mb-6">
+                        <div id="equalizer" class="equalizer inline-block">
+                            <div></div><div></div><div></div><div></div>
+                        </div>
+                    </div>
+
+                    <!-- Waveform Visualization -->
+                    <canvas id="waveform" class="waveform-canvas mb-6"></canvas>
+
+                    <!-- Playlist Display -->
+                    <div id="playlist" class="space-y-4"></div>
+
+                    <!-- Current Song -->
+                    <div id="currentSong" class="text-center mt-6 text-xl font-semibold"></div>
+
+                    <!-- Audio Element (hidden) -->
+                    <audio id="audioPlayer" src="" style="display:none;" onended="updateRecentlyPlayed()"></audio>
+                </div>
+
+                <!-- Recommendations Section -->
+                <div class="recommendations">
+                    <div class="glassmorphism p-6">
+                        <h2 class="text-xl font-bold mb-4 text-center">Recommendations</h2>
+                        <div class="grid grid-cols-1 gap-2">
+                            <button onclick="addRecommendedSongs('latest')" class="btn-animated bg-gray-900 text-white p-2 rounded-lg w-full">Latest Songs</button>
+                            <button onclick="addRecommendedSongs('love')" class="btn-animated bg-gray-900 text-white p-2 rounded-lg w-full">Love Songs</button>
+                            <button onclick="addRecommendedSongs('old')" class="btn-animated bg-gray-900 text-white p-2 rounded-lg w-full">Old Songs</button>
+                            <button onclick="addRecommendedSongs('party')" class="btn-animated bg-gray-900 text-white p-2 rounded-lg w-full">Party Hits</button>
+                            <button onclick="addRecommendedSongs('pop')" class="btn-animated bg-gray-900 text-white p-2 rounded-lg w-full">Pop</button>
+                            <button onclick="addRecommendedSongs('rock')" class="btn-animated bg-gray-900 text-white p-2 rounded-lg w-full">Rock</button>
+                            <button onclick="addRecommendedSongs('jazz')" class="btn-animated bg-gray-900 text-white p-2 rounded-lg w-full">Jazz</button>
+                            <button onclick="addRecommendedSongs('classical')" class="btn-animated bg-gray-900 text-white p-2 rounded-lg w-full">Classical</button>
+                            <button onclick="addRecommendedSongs('hiphop')" class="btn-animated bg-gray-900 text-white p-2 rounded-lg w-full">Hip-Hop</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="about-section" class="section hidden">
+        <div class="container mx-auto px-6 py-12">
+            <h1 class="text-4xl font-bold text-center mb-8">About BeatBrew</h1>
+            <div class="glassmorphism p-8 max-w-2xl mx-auto mb-12">
+                <p class="text-lg mb-6 text-gray-200">
+                    BeatBrew is your ultimate platform for creating and managing music playlists with ease. Built with a passion for music and technology, it offers a seamless experience to organize your favorite tracks.
+                </p>
+                <p class="text-lg mb-6 text-gray-200">
+                    Powered by a Doubly Linked List data structure, BeatBrew ensures smooth navigation and efficient playlist management. Enjoy a responsive, visually stunning interface anywhere, anytime.
+                </p>
+            </div>
+            <h2 class="text-3xl font-bold text-center mb-10">Meet the Team</h2>
+            <div class="glassmorphism p-6 mb-12 overflow-hidden">
+                <div id="team-carousel" class="flex space-x-6 animate-slide" style="width: 300%; animation: slide 15s infinite linear;">
+                    <div class="team-card glassmorphism p-6 text-center flex-shrink-0 w-1/3">
+                        <i class="fas fa-user-circle text-5xl text-gray-300 mb-4"></i>
+                        <h3 class="text-xl font-semibold">Alex Doe</h3>
+                        <p class="text-gray-400">Lead Developer</p>
+                    </div>
+                    <div class="team-card glassmorphism p-6 text-center flex-shrink-0 w-1/3">
+                        <i class="fas fa-user-circle text-5xl text-gray-300 mb-4"></i>
+                        <h3 class="text-xl font-semibold">Jamie Smith</h3>
+                        <p class="text-gray-400">UI/UX Designer</p>
+                    </div>
+                    <div class="team-card glassmorphism p-6 text-center flex-shrink-0 w-1/3">
+                        <i class="fas fa-user-circle text-5xl text-gray-300 mb-4"></i>
+                        <h3 class="text-xl font-semibold">Taylor Lee</h3>
+                        <p class="text-gray-400">Music Curator</p>
+                    </div>
+                </div>
+            </div>
+            <style>
+                @keyframes slide {
+                    0% { transform: translateX(0); }
+                    33.33% { transform: translateY(-33.33%); }
+                    66.66% { transform: translateY(-66.66%); }
+                    100% { transform: translateX(0); }
+                }
+            </style>
+            <h2 class="text-3xl font-bold text-center my-10">Our Journey</h2>
+            <div class="max-w-2xl mx-auto relative">
+                <div class="border-l-2 border-gray-500 pl-8 space-y-8">
+                    <div class="timeline-item relative pb-8">
+                        <p class="text-gray-200"><strong>2025:</strong> Launched BeatBrew with basic playlist functionality.</p>
+                    </div>
+                    <div class="timeline-item relative pb-8">
+                        <p class="text-gray-200"><strong>2025:</strong> Added shuffle, equalizer, and waveform features.</p>
+                    </div>
+                    <div class="timeline-item relative">
+                        <p class="text-gray-200"><strong>Future:</strong> Planning to integrate real-time music streaming.</p>
+                    </div>
+                </div>
+            </div>
+            <h2 class="text-3xl font-bold text-center my-10">Get in Touch</h2>
+            <div class="glassmorphism p-6 max-w-md mx-auto">
+                <form id="contact-form" class="space-y-4">
+                    <input type="text" placeholder="Your Name" class="w-full p-3 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-gray-500">
+                    <input type="email" placeholder="Your Email" class="w-full p-3 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-gray-500">
+                    <textarea placeholder="Your Message" class="w-full p-3 rounded-lg bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-gray-500" rows="4"></textarea>
+                    <button type="submit" class="btn-animated bg-gray-800 text-white p-3 rounded-lg w-full font-semibold">Send Message</button>
+                </form>
+            </div>
+            <script>
+                document.getElementById('contact-form').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    alert('Thank you for your message! We will get back to you soon.');
+                    this.reset();
+                });
+            </script>
+        </div>
+    </section>
+
+    <footer class="glassmorphism p-4 text-center text-gray-300">
+        <p>© 2025 BeatBrew. All rights reserved.</p>
+    </footer>
+
+    <!-- Sign In Modal -->
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-2xl mb-4">Sign In</h2>
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button onclick="signIn()">Sign In</button>
+        </div>
+    </div>
+
+    <script>
+        // Define songDatabase before the Playlist class
+        const songDatabase = [
+            { title: "Good Luck, Babe!", artist: "Chappell Roan", duration: "3:35", year: "2024", genre: "Latest", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", lyrics: "Verse 1: Good luck, babe...\nChorus: Wishing you the best..." },
+            { title: "Pink Pony Club", artist: "Chappell Roan", duration: "4:10", year: "2020", genre: "Pop", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", lyrics: "Verse 1: I’m heading to the Pink Pony Club...\nChorus: Dance all night..." },
+            { title: "Espresso", artist: "Sabrina Carpenter", duration: "2:57", year: "2024", genre: "Latest", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", lyrics: "Verse 1: I’m working late...\nChorus: Espresso, keep me up..." },
+            { title: "Taste", artist: "Sabrina Carpenter", duration: "2:30", year: "2024", genre: "Pop", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", lyrics: "Verse 1: You got that taste...\nChorus: Can’t get enough..." },
+            { title: "Perfect", artist: "Ed Sheeran", duration: "4:23", year: "2017", genre: "Love", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", lyrics: "Verse 1: I found a love...\nChorus: Darling, you look perfect tonight..." },
+            { title: "Shape of You", artist: "Ed Sheeran", duration: "3:53", year: "2017", genre: "Pop", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3", lyrics: "Verse 1: The club isn’t the best place...\nChorus: I’m in love with the shape of you..." },
+            { title: "Love Story", artist: "Taylor Swift", duration: "3:55", year: "2008", genre: "Love", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3", lyrics: "Verse 1: We were both young...\nChorus: You’ll be the prince and I’ll be the princess..." },
+            { title: "Shake It Off", artist: "Taylor Swift", duration: "3:39", year: "2014", genre: "Pop", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3", lyrics: "Verse 1: I stay out too late...\nChorus: Cause the players gonna play..." },
+            { title: "Unchained Melody", artist: "The Righteous Brothers", duration: "3:36", year: "1965", genre: "Old", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3", lyrics: "Verse 1: Oh, my love...\nChorus: I need your love..." },
+            { title: "Sweet Caroline", artist: "Neil Diamond", duration: "3:22", year: "1969", genre: "Old", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3", lyrics: "Verse 1: Where it began...\nChorus: Sweet Caroline..." },
+            { title: "Sweet Child O' Mine", artist: "Guns N' Roses", duration: "5:55", year: "1987", genre: "Rock", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3", lyrics: "Verse 1: She's got a smile...\nChorus: Where do we go now..." },
+            { title: "Bohemian Rhapsody", artist: "Queen", duration: "5:55", year: "1975", genre: "Rock", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3", lyrics: "Verse 1: Is this the real life...\nChorus: Beelzebub has a devil put aside for me..." },
+            { title: "Take Five", artist: "Dave Brubeck Quartet", duration: "5:24", year: "1959", genre: "Jazz", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3", lyrics: "Instrumental" },
+            { title: "So What", artist: "Miles Davis", duration: "9:22", year: "1959", genre: "Jazz", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3", lyrics: "Instrumental" },
+            { title: "Symphony No. 5", artist: "Ludwig van Beethoven", duration: "7:20", year: "1808", genre: "Classical", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3", lyrics: "Instrumental" },
+            { title: "Moonlight Sonata", artist: "Ludwig van Beethoven", duration: "5:50", year: "1801", genre: "Classical", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-16.mp3", lyrics: "Instrumental" },
+            { title: "Lose Yourself", artist: "Eminem", duration: "5:26", year: "2002", genre: "Hip-Hop", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-17.mp3", lyrics: "Verse 1: Look, if you had one shot...\nChorus: You only get one shot..." },
+            { title: "HUMBLE.", artist: "Kendrick Lamar", duration: "2:57", year: "2017", genre: "Hip-Hop", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-18.mp3", lyrics: "Verse 1: Nobody pray for me...\nChorus: Be humble..." }
+        ];
+
+        function showSection(sectionId) {
+            console.log("Navigating to section: ", sectionId);
+            const sections = document.querySelectorAll('.section');
+            let targetSection = null;
+            sections.forEach(section => {
+                if (section.id === sectionId) {
+                    section.classList.remove('hidden');
+                    targetSection = section;
+                } else {
+                    section.classList.add('hidden');
+                }
+            });
+            if (targetSection) {
+                setTimeout(() => {
+                    targetSection.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+                    window.scrollBy({ top: -64, behavior: 'smooth' });
+                }, 50);
+            }
+        }
+
+        class Node {
+            constructor(songTitle, artist, duration, year, genre, audioUrl) {
+                this.songTitle = songTitle;
+                this.artist = artist;
+                this.duration = duration;
+                this.year = year;
+                this.genre = genre;
+                this.audioUrl = audioUrl;
+                this.prev = null;
+                this.next = null;
+            }
+        }
+
+        class Playlist {
+            constructor() {
+                this.head = null;
+                this.tail = null;
+                this.current = null;
+                this.size = 0;
+                this.audioPlayer = document.getElementById('audioPlayer');
+                this.isPlaying = false;
+                this.recentlyPlayed = [];
+                this.loadFromStorage();
+            }
+
+            addSong(songTitle, artist, duration, year, genre, audioUrl) {
+                const newNode = new Node(songTitle, artist, duration, year, genre, audioUrl);
+                if (!this.head) {
+                    this.head = newNode;
+                    this.tail = newNode;
+                    this.current = newNode;
+                } else {
+                    newNode.prev = this.tail;
+                    this.tail.next = newNode;
+                    this.tail = newNode;
+                }
+                this.size++;
+                this.updateUI();
+                this.updateTotalDuration();
+                this.saveToStorage();
+                updateLyrics(songTitle);
+            }
+
+            clearPlaylist() {
+                this.head = null;
+                this.tail = null;
+                this.current = null;
+                this.size = 0;
+                this.audioPlayer.pause();
+                this.updateUI();
+                this.updateTotalDuration();
+                this.saveToStorage();
+                updateLyrics('');
+            }
+
+            removeSong(index) {
+                if (index < 0 || index >= this.size) return;
+                let current = this.head;
+                for (let i = 0; i < index; i++) {
+                    current = current.next;
+                }
+                if (current.prev) {
+                    current.prev.next = current.next;
+                } else {
+                    this.head = current.next;
+                }
+                if (current.next) {
+                    current.next.prev = current.prev;
+                } else {
+                    this.tail = current.prev;
+                }
+                if (this.current === current) {
+                    this.current = current.next || current.prev || null;
+                    if (this.current) this.playCurrentSong();
+                    else this.audioPlayer.pause();
+                }
+                this.size--;
+                this.updateUI();
+                this.updateTotalDuration();
+                this.saveToStorage();
+            }
+
+            removeAllSongs() {
+                if (confirm('Are you sure you want to remove all songs?')) {
+                    this.clearPlaylist();
+                }
+            }
+
+            nextSong() {
+                if (this.current && this.current.next) {
+                    this.current = this.current.next;
+                    this.playCurrentSong();
+                    this.updateCurrentSong();
+                    animateWaveform();
+                }
+            }
+
+            previousSong() {
+                if (this.current && this.current.prev) {
+                    this.current = this.current.prev;
+                    this.playCurrentSong();
+                    this.updateCurrentSong();
+                    animateWaveform();
+                }
+            }
+
+            shuffle() {
+                let nodes = [];
+                let current = this.head;
+                while (current) {
+                    nodes.push(current);
+                    current = current.next;
+                }
+                for (let i = nodes.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [nodes[i], nodes[j]] = [nodes[j], nodes[i]];
+                }
+                this.head = nodes[0] || null;
+                this.tail = nodes[nodes.length - 1] || null;
+                this.current = this.head;
+                if (nodes.length > 0) {
+                    this.head.prev = null;
+                    this.tail.next = null;
+                    for (let i = 0; i < nodes.length - 1; i++) {
+                        nodes[i].next = nodes[i + 1];
+                        nodes[i + 1].prev = nodes[i];
+                    }
+                }
+                if (this.current) this.playCurrentSong();
+                this.updateUI();
+                this.updateTotalDuration();
+                this.saveToStorage();
+            }
+
+            updateUI() {
+                const playlistDiv = document.getElementById('playlist');
+                playlistDiv.innerHTML = '';
+                let current = this.head;
+                let index = 0;
+                while (current) {
+                    const songDiv = document.createElement('div');
+                    songDiv.className = 'song-card glassmorphism p-4 flex justify-between items-center';
+                    songDiv.innerHTML = `
+                        <div class="flex items-center gap-4">
+                            <i class="fas fa-music text-gray-300"></i>
+                            <div>
+                                <h3 class="font-semibold">${current.songTitle}</h3>
+                                <p class="text-gray-400 text-sm">${current.artist} • ${current.duration} (${current.year})</p>
+                            </div>
+                        </div>
+                        <div>
+                            <button onclick="playlist.removeSong(${index})" class="btn-animated bg-red-700 p-2 rounded-lg mr-2"><i class="fas fa-trash"></i></button>
+                            <button onclick="playlist.playSong(${index}); updateLyrics('${current.songTitle}')" class="btn-animated bg-gray-800 p-2 rounded-lg"><i class="fas fa-play"></i></button>
+                        </div>
+                    `;
+                    playlistDiv.appendChild(songDiv);
+                    current = current.next;
+                    index++;
+                }
+                this.updateCurrentSong();
+                this.updateRecentlyPlayedUI();
+            }
+
+            updateCurrentSong() {
+                const currentSongDiv = document.getElementById('currentSong');
+                if (this.current) {
+                    currentSongDiv.innerHTML = `Now Playing: ${this.current.songTitle} by ${this.current.artist} (${this.current.duration})`;
+                    updateLyrics(this.current.songTitle);
+                } else {
+                    currentSongDiv.innerHTML = 'No song playing';
+                    updateLyrics('');
+                }
+            }
+
+            updateTotalDuration() {
+                let totalSeconds = 0;
+                let current = this.head;
+                while (current) {
+                    const [minutes, seconds] = current.duration.split(':').map(Number);
+                    totalSeconds += minutes * 60 + seconds;
+                    current = current.next;
+                }
+                const totalMinutes = Math.floor(totalSeconds / 60);
+                const remainingSeconds = totalSeconds % 60;
+                document.getElementById('totalDuration').innerHTML = `Total Duration: ${totalMinutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+            }
+
+            saveToStorage() {
+                const playlistData = [];
+                let current = this.head;
+                while (current) {
+                    playlistData.push({ songTitle: current.songTitle, artist: current.artist, duration: current.duration, year: current.year, genre: current.genre, audioUrl: current.audioUrl });
+                    current = current.next;
+                }
+                localStorage.setItem('beatBrewPlaylist', JSON.stringify(playlistData));
+                localStorage.setItem('beatBrewRecentlyPlayed', JSON.stringify(this.recentlyPlayed));
+            }
+
+            loadFromStorage() {
+                const savedPlaylist = localStorage.getItem('beatBrewPlaylist');
+                if (savedPlaylist) {
+                    const playlistData = JSON.parse(savedPlaylist);
+                    playlistData.forEach(item => this.addSong(item.songTitle, item.artist, item.duration, item.year, item.genre, item.audioUrl));
+                }
+                const savedRecentlyPlayed = localStorage.getItem('beatBrewRecentlyPlayed');
+                if (savedRecentlyPlayed) {
+                    this.recentlyPlayed = JSON.parse(savedRecentlyPlayed);
+                    this.updateRecentlyPlayedUI();
+                }
+            }
+
+            playSong(index) {
+                let current = this.head;
+                for (let i = 0; i < index; i++) {
+                    current = current.next;
+                }
+                this.current = current;
+                this.playCurrentSong();
+                this.updateCurrentSong();
+                animateWaveform();
+            }
+
+            playCurrentSong() {
+                if (this.current && this.current.audioUrl) {
+                    this.audioPlayer.src = this.current.audioUrl;
+                    this.audioPlayer.play().catch(error => {
+                        console.error('Error playing audio:', error);
+                        alert('Failed to play audio. Check console for details or ensure audio URL is accessible.');
+                    });
+                    this.isPlaying = true;
+                    updateLyrics(this.current.songTitle);
+                    updatePlayPauseButton();
+                }
+            }
+
+            pauseCurrentSong() {
+                this.audioPlayer.pause();
+                this.isPlaying = false;
+                updatePlayPauseButton();
+            }
+
+            updateRecentlyPlayed() {
+                if (this.current) {
+                    const song = `${this.current.songTitle} - ${this.current.artist}`;
+                    if (!this.recentlyPlayed.includes(song)) {
+                        this.recentlyPlayed.unshift(song);
+                        if (this.recentlyPlayed.length > 5) this.recentlyPlayed.pop();
+                        this.updateRecentlyPlayedUI();
+                        this.saveToStorage();
+                    }
+                }
+            }
+
+            updateRecentlyPlayedUI() {
+                const recentContent = document.getElementById('recent-content');
+                recentContent.innerHTML = '';
+                this.recentlyPlayed.forEach(song => {
+                    const songTitle = song.split(' - ')[0];
+                    const songDiv = document.createElement('div');
+                    songDiv.className = 'song-item';
+                    songDiv.textContent = song;
+                    songDiv.onclick = () => { playlist.playSongByTitle(songTitle); updateLyrics(songTitle); };
+                    recentContent.appendChild(songDiv);
+                });
+            }
+
+            playSongByTitle(title) {
+                let current = this.head;
+                while (current) {
+                    if (current.songTitle === title) {
+                        this.current = current;
+                        this.playCurrentSong();
+                        this.updateCurrentSong();
+                        animateWaveform();
+                        break;
+                    }
+                    current = current.next;
+                }
+            }
+
+            getArtistSongs(artist) {
+                return songDatabase.filter(song => song.artist === artist);
+            }
+        }
+
+        const playlist = new Playlist();
+
+        function addSong() {
+            const songTitle = document.getElementById('songTitle').value;
+            const artist = document.getElementById('artist').value;
+            const duration = document.getElementById('duration').value;
+            if (songTitle && artist && duration) {
+                playlist.addSong(songTitle, artist, duration, new Date().getFullYear(), "Custom", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3");
+                document.getElementById('songTitle').value = '';
+                document.getElementById('artist').value = '';
+                document.getElementById('duration').value = '';
+            } else {
+                alert('Please enter song title, artist, and duration');
+            }
+        }
+
+        function playNext() {
+            playlist.nextSong();
+        }
+
+        function playPrevious() {
+            playlist.previousSong();
+        }
+
+        function shufflePlaylist() {
+            playlist.shuffle();
+        }
+
+        function removeAllSongs() {
+            if (confirm('Are you sure you want to remove all songs?')) {
+                playlist.removeAllSongs();
+            }
+        }
+
+        function savePlaylist() {
+            playlist.saveToStorage();
+            alert('Playlist saved successfully!');
+        }
+
+        function playSong(index) {
+            playlist.playSong(index);
+        }
+
+        const canvas = document.getElementById('waveform');
+        const ctx = canvas.getContext('2d');
+        function animateWaveform() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const bars = 20;
+            const amplitude = 20;
+            for (let i = 0; i < bars; i++) {
+                const height = amplitude + Math.random() * 20;
+                ctx.fillStyle = '#2e2e2e';
+                ctx.fillRect(i * (canvas.width / bars), canvas.height - height, canvas.width / bars - 2, height);
+            }
+            requestAnimationFrame(animateWaveform);
+        }
+        animateWaveform();
+
+        function togglePlayPause() {
+            if (playlist.isPlaying) {
+                playlist.pauseCurrentSong();
+            } else if (playlist.current) {
+                playlist.playCurrentSong();
+            }
+        }
+
+        function updatePlayPauseButton() {
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            playPauseBtn.innerHTML = playlist.isPlaying ? '<i class="fas fa-pause"></i>' : '<i class="fas fa-play"></i>';
+        }
+
+        function playBeep() {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
+            oscillator.connect(audioCtx.destination);
+            oscillator.start();
+            setTimeout(() => oscillator.stop(), 200);
+        }
+
+        function searchSongOnline() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (query) {
+                console.log('Searching for:', query);
+                const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+                const youtubeUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+                window.open(googleUrl, '_blank');
+                window.open(youtubeUrl, '_blank');
+                document.getElementById('searchInput').value = '';
+            } else {
+                console.log('No query entered');
+            }
+        }
+
+        function addRecommendedSongs(category) {
+            playlist.clearPlaylist();
+            let recommendedSongs = [];
+
+            switch (category) {
+                case 'latest':
+                    recommendedSongs = songDatabase.filter(song => song.genre === 'Latest');
+                    break;
+                case 'love':
+                    recommendedSongs = songDatabase.filter(song => song.genre === 'Love');
+                    break;
+                case 'old':
+                    recommendedSongs = songDatabase.filter(song => song.genre === 'Old');
+                    break;
+                case 'party':
+                    recommendedSongs = songDatabase.filter(song => song.genre === 'Party');
+                    break;
+                case 'pop':
+                    recommendedSongs = songDatabase.filter(song => song.genre === 'Pop');
+                    break;
+                case 'rock':
+                    recommendedSongs = songDatabase.filter(song => song.genre === 'Rock');
+                    break;
+                case 'jazz':
+                    recommendedSongs = songDatabase.filter(song => song.genre === 'Jazz');
+                    break;
+                case 'classical':
+                    recommendedSongs = songDatabase.filter(song => song.genre === 'Classical');
+                    break;
+                case 'hiphop':
+                    recommendedSongs = songDatabase.filter(song => song.genre === 'Hip-Hop');
+                    break;
+                default:
+                    recommendedSongs = songDatabase;
+            }
+
+            recommendedSongs.forEach(song => {
+                playlist.addSong(song.title, song.artist, song.duration, song.year, song.genre, song.audioUrl);
+            });
+            playlist.updateUI();
+            if (recommendedSongs.length > 0) {
+                playlist.playSong(0);
+            }
+            alert(`Showing ${recommendedSongs.length} ${category} songs in your playlist!`);
+        }
+
+        function addPickedSong(title, artist, duration, year, genre) {
+            playlist.addSong(title, artist, duration, year, genre, "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3");
+            playlist.playSongByTitle(title);
+            updateLyrics(title);
+        }
+
+        function addMadeSong(title, artist, duration, year, genre) {
+            playlist.addSong(title, artist, duration, year, genre, "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3");
+            playlist.playSongByTitle(title);
+            updateLyrics(title);
+        }
+
+        function addPopularAlbum(title, artist, duration, year, genre) {
+            playlist.addSong(title, artist, duration, year, genre, "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3");
+            playlist.playSongByTitle(title);
+            updateLyrics(title);
+        }
+
+        function showCategory(category) {
+            const contents = document.querySelectorAll('.category-content');
+            contents.forEach(content => content.classList.remove('active'));
+            document.getElementById(`${category}-content`).classList.add('active');
+        }
+
+        function showArtistSongs(artist) {
+            showCategory('artists');
+            const artistContent = document.getElementById('artists-content');
+            artistContent.innerHTML = `<h3 class="text-md font-semibold mb-2">Songs by ${artist}</h3>`;
+            const songs = playlist.getArtistSongs(artist);
+            songs.forEach(song => {
+                const songDiv = document.createElement('div');
+                songDiv.className = 'song-item';
+                songDiv.textContent = `${song.title} - ${song.duration}`;
+                songDiv.onclick = () => {
+                    playlist.addSong(song.title, song.artist, song.duration, song.year, song.genre, song.audioUrl);
+                    playlist.playSongByTitle(song.title);
+                    updateLyrics(song.title);
+                };
+                artistContent.appendChild(songDiv);
+            });
+        }
+
+        function updateLyrics(songTitle) {
+            const lyricsContent = document.getElementById('lyrics-content');
+            const song = songDatabase.find(s => s.title === songTitle);
+            if (song && song.lyrics) {
+                lyricsContent.innerHTML = song.lyrics.replace(/\n/g, '<br>');
+            } else {
+                lyricsContent.innerHTML = 'Lyrics not available for this song.';
+            }
+        }
+
+        Playlist.prototype.findSong = function(title) {
+            let current = this.head;
+            while (current) {
+                if (current.songTitle === title) return true;
+                current = current.next;
+            }
+            return false;
+        }
+
+        // Star Animation Logic
+        function createStar() {
+            const starContainer = document.getElementById('star-container');
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.left = `${Math.random() * 100}vw`;
+            star.style.animationDuration = `${Math.random() * 3 + 2}s`;
+            star.style.opacity = Math.random() * 0.6 + 0.4;
+            starContainer.appendChild(star);
+
+            star.addEventListener('animationend', () => {
+                star.remove();
+            });
+        }
+
+        function startStarFall() {
+            setInterval(() => {
+                if (Math.random() > 0.3) {
+                    createStar();
+                }
+            }, 200);
+        }
+
+        // Authentication Logic
+        function toggleAuth() {
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            if (isLoggedIn) {
+                signOut();
+            } else {
+                document.getElementById('authModal').style.display = 'block';
+            }
+        }
+
+        function signIn() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            if (username && password) {
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('username', username);
+                document.getElementById('authModal').style.display = 'none';
+                document.getElementById('authLink').textContent = 'Sign Out';
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+                document.getElementById('usernameDisplay').textContent = `Welcome, ${username}!`;
+                alert(`Signed in successfully as ${username}!`);
+            } else {
+                alert('Please enter both username and password.');
+            }
+        }
+
+        function signOut() {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('username');
+            document.getElementById('authLink').textContent = 'Sign In';
+            document.getElementById('usernameDisplay').textContent = '';
+            alert('Signed out successfully!');
+        }
+
+        // Check login state on load
+        window.onload = () => {
+            showSection('home-section');
+            showCategory('picked');
+            startStarFall();
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            const username = localStorage.getItem('username') || '';
+            document.getElementById('authLink').textContent = isLoggedIn ? 'Sign Out' : 'Sign In';
+            document.getElementById('usernameDisplay').textContent = isLoggedIn ? `Welcome, ${username}!` : '';
+            document.getElementById('authModal').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('authModal')) {
+                    document.getElementById('authModal').style.display = 'none';
+                }
+            });
+        };
+    </script>
+</body>
+</html>
